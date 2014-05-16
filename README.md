@@ -1,0 +1,4 @@
+maze
+====
+
+Fun with mazes
