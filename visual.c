@@ -29,20 +29,26 @@ void update_maze(long cl, char (*maze)[cl], long rl, long sr, long sc, long sr_o
 {
         int srl = sr*2 + 1;
         int scl = sc*2 + 1;
+        int e_off = 0;
         char symbol[5] = {'o', 'x', '*', 'S', 'E'};
 
         if (type == BACK) {
                 maze[sr_old*2+1][sc_old*2+1] = 'x';
         }
 
+        // a small hack to get rid of the double E
+        if (type == END) {
+                e_off = 2;
+        }
+
         if (sr > sr_old)
-                maze[srl-1][scl] = symbol[type];
+                maze[srl-1][scl] = symbol[type-e_off];
         else if (sr < sr_old)
-                maze[srl+1][scl] = symbol[type];
+                maze[srl+1][scl] = symbol[type-e_off];
         else if (sc > sc_old)
-                maze[srl][scl-1] = symbol[type];
+                maze[srl][scl-1] = symbol[type-e_off];
         else if (sc < sc_old)
-                maze[srl][scl+1] = symbol[type];
+                maze[srl][scl+1] = symbol[type-e_off];
         else if (sc != sc_old && sr != sr_old)
                 fprintf(stderr, "error: something broke traversing (%ld, %ld) -> (%ld, %ld)\n",
                         sc_old, sr_old, sc, sr);
