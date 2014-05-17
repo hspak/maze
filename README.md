@@ -3,4 +3,4 @@ maze
 
 Fun with mazes
 
-Following [this](ttp://mazeworks.com/mazegen/mazetut/)
+Following [this](http://mazeworks.com/mazegen/mazetut/)
