@@ -81,35 +81,44 @@ void generate_maze(long col, uint16_t (*cell)[col], long row, struct node *head)
 
 void select_dir(long col, uint16_t (*cell)[col], long *sc, long *sr, int *dir_good, struct node *head)
 {
+        int rand = get_rand(4);
+        while (!dir_good[rand]) rand = get_rand(4);
+
         // (maze too simple without random)
-        if (dir_good[N]) {
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
-                (*sr)--;
-                printf("AT (%ld, %ld)\n", *sc, *sr);
-                stack_push(head, *sr, *sc);
-                cell[*sr][*sc] = cell[*sr][*sc];
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
-        } else if (dir_good[E]) {
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
-                (*sc)++;
-                printf("AT (%ld, %ld)\n", *sc, *sr);
-                stack_push(head, *sr, *sc);
-                cell[*sr][*sc] = cell[*sr][*sc];
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
-        } else if (dir_good[S]) {
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
-                (*sr)++;
-                printf("AT (%ld, %ld)\n", *sc, *sr);
-                stack_push(head, *sr, *sc);
-                cell[*sr][*sc] = cell[*sr][*sc];
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
-        } else if (dir_good[W]) {
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
-                (*sc)--;
-                printf("AT (%ld, %ld)\n", *sc, *sr);
-                stack_push(head, *sr, *sc);
-                cell[*sr][*sc] = cell[*sr][*sc];
-                cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
+        switch(rand)
+        {
+                case(N):
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
+                        (*sr)--;
+                        printf("AT (%ld, %ld)\n", *sc, *sr);
+                        stack_push(head, *sr, *sc);
+                        cell[*sr][*sc] = cell[*sr][*sc];
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
+                        break;
+                case(E):
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
+                        (*sc)++;
+                        printf("AT (%ld, %ld)\n", *sc, *sr);
+                        stack_push(head, *sr, *sc);
+                        cell[*sr][*sc] = cell[*sr][*sc];
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
+                        break;
+                case(S):
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
+                        (*sr)++;
+                        printf("AT (%ld, %ld)\n", *sc, *sr);
+                        stack_push(head, *sr, *sc);
+                        cell[*sr][*sc] = cell[*sr][*sc];
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
+                        break;
+                case(W):
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
+                        (*sc)--;
+                        printf("AT (%ld, %ld)\n", *sc, *sr);
+                        stack_push(head, *sr, *sc);
+                        cell[*sr][*sc] = cell[*sr][*sc];
+                        cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
+                        break;
         }
 }
 
