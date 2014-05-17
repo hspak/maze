@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include "stack.h"
 #include "rand.h"
 #include "visual.h"
@@ -36,29 +35,32 @@ void initialize_cells(long col, uint16_t (*cell)[col], long row)
         }
 }
 
-void generate_maze(long col, uint16_t (*cell)[col], long row, struct node *head)
+void generate_maze(long col, uint16_t (*cell)[col], long row, struct node *head
+                  ,long cl, char (*maze)[cl], long rl)
 {
         set_seed();
-
-        long cl = col*2 + 1 + 1; // extra for null char
-        long rl = row*2 + 1;
-        char (*maze)[cl] = malloc(sizeof(*maze) * rl);
-        init_display(cl, maze, rl);
-
         long cell_count = row*col;
         long visited_count = 1;
+
+        // selected col/row
         long sc = get_rand(col);
-        /* long sr = get_rand(row); */
-        long sr = row-1;
-        printf("AT (%ld, %ld)\n", sc, sr);
+        long sr = get_rand(row);
+
+        // keep 1 before for visual (knock down wall)
+        long sc_old = sc;
+        long sr_old = sr;
+
+        /* printf("AT (%ld, %ld)\n", sc, sr); */
         int *dir_good = malloc(sizeof(int) * 4);
-        update_maze(cl, maze, rl, sr, sc, PATH);
+        update_maze(cl, maze, rl, sr, sc, sr_old, sc_old, START);
         while (visited_count < cell_count) {
                 int neighbor_count = find_neighbors(col, cell, row, sc, sr, dir_good);
                 if (neighbor_count > 0) {
                         // pick a direction to go
+                        sc_old = sc;
+                        sr_old = sr;
                         select_dir(col, cell, &sc, &sr, dir_good, head);
-                        update_maze(cl, maze, rl, sr, sc, PATH);
+                        update_maze(cl, maze, rl, sr, sc, sr_old, sc_old, PATH);
                         visited_count++;
                 } else {
                         // backtrack
@@ -69,54 +71,78 @@ void generate_maze(long col, uint16_t (*cell)[col], long row, struct node *head)
                         if (loc.row < sr) cell[sr][sc] = cell[sr][sc] | 0x1000; // north
 
                         // new loc
+                        update_maze(cl, maze, rl, loc.row, loc.col, sr, sc, BACK);
                         sc = loc.col;
                         sr = loc.row;
-                        printf("BA (%ld, %ld)\n", sc, sr);
-                        update_maze(cl, maze, rl, sr, sc, BACK);
+                        /* printf("BA (%ld, %ld)\n", sc, sr); */
                 }
-                sleep(1);
         }
+        update_maze(cl, maze, rl, sr, sc, sr_old, sc_old, END);
         free(dir_good);
+}
+
+void generate_soln(long col, uint16_t (*cell)[col], struct node *head
+                  ,long cl, char (*maze)[cl], long rl)
+{
+        struct coord prev = stack_pop(head);
+        struct coord curr;
+        update_maze(cl, maze, rl, prev.row, prev.col, prev.row, prev.col, SOLN);
+        while (head->next) {
+                curr = stack_pop(head);
+                if (prev.row != curr.row && prev.col != curr.col) {
+                        fprintf(stderr, "error: something broke finding sol'n (%ld, %ld) -> (%ld, %ld)\n",
+                                prev.col, prev.row, curr.col, curr.row);
+                } if (prev.row > curr.row) { // south
+                        cell[curr.row][curr.col] = cell[curr.row][curr.col] | 0x0400;
+                } else if (prev.row < curr.row) { // north
+                        cell[curr.row][curr.col] = cell[curr.row][curr.col] | 0x0100;
+                } else if (prev.col > curr.col) { // west
+                        cell[curr.row][curr.col] = cell[curr.row][curr.col] | 0x0800;
+                } else if (prev.col < curr.col) { // east
+                        cell[curr.row][curr.col] = cell[curr.row][curr.col] | 0x0200;
+                } else {
+                        fprintf(stderr, "error: something broke finding sol'n (%ld, %ld) -> (%ld, %ld)\n",
+                                prev.col, prev.row, curr.col, curr.row);
+                }
+                /* printf("SOL'N (%ld, %ld)\n", curr.row, curr.col); */
+                /* printf("(%ld, %ld)->(%ld, %ld)\n", prev.row, prev.col, curr.row, curr.col); */
+                update_maze(cl, maze, rl, prev.row, prev.col, curr.row, curr.col, SOLN);
+                prev = curr;
+        }
 }
 
 void select_dir(long col, uint16_t (*cell)[col], long *sc, long *sr, int *dir_good, struct node *head)
 {
         int rand = get_rand(4);
         while (!dir_good[rand]) rand = get_rand(4);
-
-        // (maze too simple without random)
         switch(rand)
         {
                 case(N):
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
-                        (*sr)--;
-                        printf("AT (%ld, %ld)\n", *sc, *sr);
                         stack_push(head, *sr, *sc);
-                        cell[*sr][*sc] = cell[*sr][*sc];
+                        (*sr)--;
+                        /* printf("AT (%ld, %ld)\n", *sc, *sr); */
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
                         break;
                 case(E):
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
-                        (*sc)++;
-                        printf("AT (%ld, %ld)\n", *sc, *sr);
                         stack_push(head, *sr, *sc);
-                        cell[*sr][*sc] = cell[*sr][*sc];
+                        (*sc)++;
+                        /* printf("AT (%ld, %ld)\n", *sc, *sr); */
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
                         break;
                 case(S):
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFB;
-                        (*sr)++;
-                        printf("AT (%ld, %ld)\n", *sc, *sr);
                         stack_push(head, *sr, *sc);
-                        cell[*sr][*sc] = cell[*sr][*sc];
+                        (*sr)++;
+                        /* printf("AT (%ld, %ld)\n", *sc, *sr); */
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFE;
                         break;
                 case(W):
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFF7;
-                        (*sc)--;
-                        printf("AT (%ld, %ld)\n", *sc, *sr);
                         stack_push(head, *sr, *sc);
-                        cell[*sr][*sc] = cell[*sr][*sc];
+                        (*sc)--;
+                        /* printf("AT (%ld, %ld)\n", *sc, *sr); */
                         cell[*sr][*sc] = cell[*sr][*sc] & 0xFFFD;
                         break;
         }

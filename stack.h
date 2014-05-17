@@ -2,8 +2,8 @@
 #define STACK_H
 
 struct coord {
-    int row;
-    int col;
+    long row;
+    long col;
 };
 
 struct node {

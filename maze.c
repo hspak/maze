@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "generate.h"
 #include "stack.h"
+#include "visual.h"
 #include "maze.h"
 
 int main(int argc, char *argv[])
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "error: unknown row count\n");
                 return 1;
         }
-        col = strtol(argv[1], &endptr, 10);
+        col = strtol(argv[2], &endptr, 10);
         if (endptr == NULL || *endptr != (char)0) {
                 fprintf(stderr, "error: unknown column count\n");
                 return 1;
@@ -29,9 +30,16 @@ int main(int argc, char *argv[])
         uint16_t (*cell)[col] = malloc(sizeof(*cell) * row);
         initialize_cells(col, cell, row);
 
+        // visual init
+        long cl = col*2 + 1 + 1; // extra for null char
+        long rl = row*2 + 1;
+        char (*maze)[cl] = malloc(sizeof(*maze) * rl);
+        init_display(cl, maze, rl);
+
         // create
         struct node *head = create_node(0, 0);
-        generate_maze(col, cell, row, head);
+        generate_maze(col, cell, row, head, cl, maze, rl);
+        generate_soln(col, cell, head, cl, maze, rl);
 
 #ifdef TESTING
         int ti;
@@ -47,6 +55,7 @@ int main(int argc, char *argv[])
         // clean
         stack_destroy(head);
         free(head);
+        free(maze);
         free(cell);
         return 0;
 }
