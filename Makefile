@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = -std=c99 -Wall -Wextra -pedantic
-SRC = maze.c stack.c rand.c
+SRC = maze.c stack.c rand.c generate.c
 OBJ = $(SRC:.c=.o)
 Test = "hi"
 
