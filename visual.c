@@ -17,11 +17,9 @@ void init_display(long cl, char (*maze)[cl], long rl)
                                 else maze[rc][cc] = '+';
                         }
                         altc = ~altc;
-                        printf("%c", maze[rc][cc]);
                 }
                 altr = ~altr;
                 maze[rc][cl-1] = '\0';
-                printf("\n");
         }
 }
 
@@ -56,7 +54,9 @@ void update_maze(long cl, char (*maze)[cl], long rl, long sr, long sc, long sr_o
         if (maze[srl][scl] != 'E' && maze[srl][scl] != 'S')
                 maze[srl][scl] = symbol[type];
         display_maze(cl, maze, rl);
-        usleep(100000);
+
+        // deprecated, but for aesthetics anyway
+        usleep(400000);
 }
 
 void display_maze(long cl, char (*maze)[cl], long rl)
